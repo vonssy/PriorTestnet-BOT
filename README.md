@@ -16,6 +16,7 @@ PRIOR Testnet BOT
 ## Requiremnets
 
 - Make sure you have Python3.9 or higher installed and pip.
+- Some Base Sepolia for gas fees. Don't have it? you can get SepoliaETH [Here](https://cloud.google.com/application/web3/faucet/ethereum/sepolia) and then bridge it to Base Sepolia [Here](https://superbridge.app/base-sepolia)
 
 ## Instalation
 
