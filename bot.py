@@ -95,7 +95,7 @@ class PriorTestnet:
     def welcome(self):
         print(
             f"""
-        {Fore.GREEN + Style.BRIGHT}Auto Claim {Fore.BLUE + Style.BRIGHT}Prior Testnet - BOT
+        {Fore.GREEN + Style.BRIGHT}Auto Claim Faucet & Swap {Fore.BLUE + Style.BRIGHT}Prior Testnet - BOT
             """
             f"""
         {Fore.GREEN + Style.BRIGHT}Rey? {Fore.YELLOW + Style.BRIGHT}<INI WATERMARK>
