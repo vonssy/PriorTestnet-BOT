@@ -308,6 +308,21 @@ class PriorTestnet:
                     continue
                 return None
     
+    async def user_data(self, address: str, proxy=None, retries=5):
+        url = f"{self.BASE_API}/users/{address}"
+        for attempt in range(retries):
+            connector = ProxyConnector.from_url(proxy) if proxy else None
+            try:
+                async with ClientSession(connector=connector, timeout=ClientTimeout(total=120)) as session:
+                    async with session.get(url=url, headers=self.headers) as response:
+                        response.raise_for_status()
+                        return await response.json()
+            except (Exception, ClientResponseError) as e:
+                if attempt < retries - 1:
+                    await asyncio.sleep(5)
+                    continue
+                return None
+    
     async def claim_faucet(self, address: str, proxy=None, retries=5):
         url = f"{self.BASE_API}/faucet/claim"
         data = json.dumps({"address":address})
@@ -367,7 +382,29 @@ class PriorTestnet:
                 await asyncio.sleep(3)
                 continue
 
-            return user
+            return True
+            
+    async def process_get_user_data(self, address: str, use_proxy: bool):
+        is_authenticate = await self.process_user_auth(address, use_proxy)
+        if is_authenticate:
+            proxy = self.get_next_proxy_for_account(address) if use_proxy else None
+
+            user = None
+            while user is None:
+                user = await self.user_data(address, proxy)
+                if not user:
+                    self.log(
+                        f"{Fore.CYAN+Style.BRIGHT}Status    :{Style.RESET_ALL}"
+                        f"{Fore.RED+Style.BRIGHT} GET User Data Failed {Style.RESET_ALL}"
+                        f"{Fore.MAGENTA+Style.BRIGHT}-{Style.RESET_ALL}"
+                        f"{Fore.YELLOW+Style.BRIGHT} Retrying... {Style.RESET_ALL}"
+                    )
+
+                    proxy = self.rotate_proxy_for_account(address) if use_proxy else None
+                    await asyncio.sleep(3)
+                    continue
+
+                return user
         
     async def process_swap_prior_to_usdc(self, account: str, address: str, proxy=None):
         decimals, balance = await self.get_token_balance(address, self.PRIOR_CONTRACT_ADDRESS)
@@ -509,7 +546,7 @@ class PriorTestnet:
             )
 
     async def process_accounts(self, account: str, address: str, use_proxy: bool):
-        user = await self.process_user_auth(address, use_proxy)
+        user = await self.process_get_user_data(address, use_proxy)
         if user:
             proxy = self.get_next_proxy_for_account(address) if use_proxy else None
             self.log(
